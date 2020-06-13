@@ -1,52 +1,40 @@
 import * as express from "express";
-import * as mongodb from "mongodb";
-import { MongoHelper } from "../helper/mongo.helper";
+import { TodoModel } from "../model/todo";
 
 // eslint-disable-next-line new-cap
 const todoRoutes = express.Router();
 
-const getCollection = () => {
-  return MongoHelper.client.db("todo").collection("todos");
-};
-
 todoRoutes.get(
   "/todo",
   (req: express.Request, rep: express.Response, next: express.NextFunction) => {
-    const collection = getCollection();
-    collection.find({}).toArray((err, items) => {
-      if (err) {
-        rep.status(500);
-        rep.end();
-        console.error("Error", err);
-      } else {
-        const itemsReturn = items.map((item) => {
+    TodoModel.find()
+      .then((items: any) => {
+        const itemsReturn = items.map((item: any) => {
           return {
             id: item._id,
             description: item.description,
           };
         });
         rep.json(itemsReturn);
-      }
-    });
+      })
+      .catch((err) => {
+        rep.status(500);
+        rep.end();
+        console.error("Error", err);
+      });
   }
 );
 
 todoRoutes.post(
   "/todo",
-  (req: express.Request, rep: express.Response, next: express.NextFunction) => {
+  async (
+    req: express.Request,
+    rep: express.Response,
+    next: express.NextFunction
+  ) => {
     const description = req.body["description"];
-    const collection = getCollection();
-    collection.insertOne({ description: description });
-    rep.end();
-  }
-);
-
-todoRoutes.delete(
-  "/todo/:id",
-  (req: express.Request, rep: express.Response, next: express.NextFunction) => {
-    const id = req.params["id"];
-    const collection = getCollection();
-    collection.findOneAndDelete({ _id: new mongodb.ObjectId(id) });
+    const item = new TodoModel({ description: description });
+    await item.save();
     rep.end();
   }
 );
@@ -56,15 +44,18 @@ todoRoutes.put(
   (req: express.Request, rep: express.Response, next: express.NextFunction) => {
     const description = req.body["description"];
     const id = req.params["id"];
-    const collection = getCollection();
-    collection.findOneAndUpdate(
-      { _id: new mongodb.ObjectId(id) },
-      {
-        $set: {
-          description: description,
-        },
-      }
-    );
+    TodoModel.findByIdAndUpdate(id, {
+      description: description,
+    });
+    rep.end();
+  }
+);
+
+todoRoutes.delete(
+  "/todo/:id",
+  (req: express.Request, rep: express.Response, next: express.NextFunction) => {
+    const id = req.params["id"];
+    TodoModel.findByIdAndRemove(id);
     rep.end();
   }
 );

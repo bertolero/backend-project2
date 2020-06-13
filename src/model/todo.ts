@@ -4,6 +4,6 @@ const TodoSchema = new mongoose.Schema({
   description: String,
 });
 
-const TodoModel = mongoose.model("todo", TodoSchema);
+const TodoModel = mongoose.model("todo", TodoSchema, "todo");
 
 export { TodoModel };
