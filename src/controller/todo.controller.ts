@@ -1,13 +1,17 @@
-import * as express from "express";
-import { TodoModel } from "../model/todo";
+import { ITodo, TodoModel } from "../model/todo";
+import { BodyProp, Controller, Delete, Get, Post, Put, Route } from "tsoa";
 
 // eslint-disable-next-line new-cap
-const todoRoutes = express.Router();
-
-todoRoutes.get(
-  "/todo",
-  (req: express.Request, rep: express.Response, next: express.NextFunction) => {
-    TodoModel.find()
+@Route("/todo")
+/**
+ * Controller class
+ */
+export class TodoController extends Controller {
+  // eslint-disable-next-line new-cap
+  @Get()
+  // eslint-disable-next-line require-jsdoc
+  public getAll(): Promise<ITodo[]> {
+    return TodoModel.find()
       .then((items: any) => {
         const itemsReturn = items.map((item: any) => {
           return {
@@ -15,49 +19,35 @@ todoRoutes.get(
             description: item.description,
           };
         });
-        rep.json(itemsReturn);
+        return itemsReturn;
       })
       .catch((err) => {
-        rep.status(500);
-        rep.end();
+        super.setStatus(500);
         console.error("Error", err);
       });
   }
-);
 
-todoRoutes.post(
-  "/todo",
-  async (
-    req: express.Request,
-    rep: express.Response,
-    next: express.NextFunction
-  ) => {
-    const description = req.body["description"];
+  // eslint-disable-next-line new-cap
+  @Post()
+  // eslint-disable-next-line new-cap,require-jsdoc
+  public create(@BodyProp() description: string): void {
     const item = new TodoModel({ description: description });
-    await item.save();
-    rep.end();
+    item.save();
   }
-);
 
-todoRoutes.put(
-  "/todo/:id",
-  (req: express.Request, rep: express.Response, next: express.NextFunction) => {
-    const description = req.body["description"];
-    const id = req.params["id"];
+  // eslint-disable-next-line new-cap
+  @Put("/{id}")
+  // eslint-disable-next-line new-cap,require-jsdoc
+  public update(id: string, @BodyProp() description: string): void {
     TodoModel.findByIdAndUpdate(id, {
       description: description,
     });
-    rep.end();
   }
-);
 
-todoRoutes.delete(
-  "/todo/:id",
-  (req: express.Request, rep: express.Response, next: express.NextFunction) => {
-    const id = req.params["id"];
+  // eslint-disable-next-line new-cap
+  @Delete("/{id}")
+  // eslint-disable-next-line require-jsdoc
+  public delete(id: string): void {
     TodoModel.findByIdAndRemove(id);
-    rep.end();
   }
-);
-
-export { todoRoutes };
+}
