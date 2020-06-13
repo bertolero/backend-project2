@@ -2,7 +2,7 @@ import * as express from "express";
 import * as cors from "cors";
 import * as bodyParser from "body-parser";
 
-import { requestLoggerMiddleware } from "./request.logger.middleware";
+import { requestLoggerMiddleware } from "./middleware/request.logger.middleware";
 
 const app = express();
 app.use(cors());

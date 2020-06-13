@@ -1,6 +1,6 @@
 import { app } from "./app";
 import * as http from "http";
-import { MongoHelper } from "./mongo.helper";
+import { MongoHelper } from "./helper/mongo.helper";
 
 const PORT = 8080;
 const server = http.createServer(app);
