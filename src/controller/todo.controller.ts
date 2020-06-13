@@ -1,40 +1,70 @@
 import * as express from "express";
+import * as mongodb from "mongodb";
+import { MongoHelper } from "../helper/mongo.helper";
 
+// eslint-disable-next-line new-cap
 const todoRoutes = express.Router();
+
+const getCollection = () => {
+  return MongoHelper.client.db("todo").collection("todos");
+};
 
 todoRoutes.get(
   "/todo",
   (req: express.Request, rep: express.Response, next: express.NextFunction) => {
-    rep.json([
-      {
-        id: 1,
-        description: "Buy breed",
-      },
-    ]);
+    const collection = getCollection();
+    collection.find({}).toArray((err, items) => {
+      if (err) {
+        rep.status(500);
+        rep.end();
+        console.error("Error", err);
+      } else {
+        const itemsReturn = items.map((item) => {
+          return {
+            id: item._id,
+            description: item.description,
+          };
+        });
+        rep.json(itemsReturn);
+      }
+    });
   }
 );
 
 todoRoutes.post(
-  "/todo:id",
+  "/todo",
   (req: express.Request, rep: express.Response, next: express.NextFunction) => {
-    console.info(req.body);
-    console.info(req.params.id);
+    const description = req.body["description"];
+    const collection = getCollection();
+    collection.insertOne({ description: description });
     rep.end();
   }
 );
 
 todoRoutes.delete(
-  "/todo:id",
+  "/todo/:id",
   (req: express.Request, rep: express.Response, next: express.NextFunction) => {
-    console.info(req.params.id);
+    const id = req.params["id"];
+    const collection = getCollection();
+    collection.findOneAndDelete({ _id: new mongodb.ObjectId(id) });
     rep.end();
   }
 );
 
 todoRoutes.put(
-  "/todo",
+  "/todo/:id",
   (req: express.Request, rep: express.Response, next: express.NextFunction) => {
-    console.info(req.body);
+    const description = req.body["description"];
+    const id = req.params["id"];
+    const collection = getCollection();
+    collection.findOneAndUpdate(
+      { _id: new mongodb.ObjectId(id) },
+      {
+        $set: {
+          description: description,
+        },
+      }
+    );
     rep.end();
   }
 );
